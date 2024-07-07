@@ -1,17 +1,17 @@
 import numpy as np
+import pandas as pd
 
 class Die:
     
-    def __init__(self):
-        # try:
-        #     isinstance(faces, np.ndarray)
-        # except:
-        #     raise TypeError("Please input a numpy array of faces.")
-        # try:
-        #     len(faces) == len(faces.unique())
-        # except:
-        #     raise ValueError("Please input an array of distinct values.")  
-        pass
+    def __init__(self, faces):
+        if not isinstance(faces, np.ndarray):
+            raise TypeError("Please input a numpy array of faces.")
+            
+        if not len(faces) == len(np.unique(faces)):
+            raise ValueError("Faces must be distinct.")  
+            
+        self.__df = pd.DataFrame.from_dict({face:1.0 for face in faces}, orient='index', columns=["Weight"])
+        print(self.__df)
         
     def change_weight(self):
         pass
