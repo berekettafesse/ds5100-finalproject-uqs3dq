@@ -6,8 +6,12 @@ class Die:
     """An object with faces and weights that can be rolled to get results and be used in a game"""
     
     def __init__(self, faces):
-        """Initializes Die object with distinct faces from input 
-        with a weight of 1.0"""
+        """Initializes Die object to have weight = 1.0 for all faces.
+        
+        Parameters: 
+        faces (np.ndarray): An array of faces for the die that can be strings or numbers
+        """
+        
         if not isinstance(faces, np.ndarray):
             raise TypeError("Please input a numpy array of faces.")
             
@@ -21,7 +25,12 @@ class Die:
         
     def change_weight(self, face, new_weight):
         """Changes the weight of a face of the die.
-        Face and new weight specified in arguments."""
+        
+        Parameters:
+        
+        face (str,int): The face of the die to be changed
+        new_weight: The new weight of the specified face
+        """
         if face not in self.__df.index:
             raise IndexError('Please input a valid face.')
         try:
@@ -32,15 +41,22 @@ class Die:
         
         
     def roll(self, rolls=1):
-        """Rolls the die a given amount of times (default 1)
-        Returns a list of the outcomes"""
+        """Rolls the die a given amount of times
+        
+        Parameters:
+        rolls (int): How many times to roll the die. Default = 1
+        
+        Returns:
+        list: outcomes"""
         sample = random.choices(self.__df.index, weights=self.__df["Weight"], k=rolls)
         return(sample)
         
         
     def current_state(self):
-        """Returns a copy of the die data frame storing the faces and weights,"""
-        return(self.__df)
+        """
+        Returns:
+        pd.DataFrame: copy of the die data frame storing the faces and weights"""
+        return(self.__df.copy())
     
                
 class Game:
@@ -48,13 +64,18 @@ class Game:
     similar Die objects and get the results"""
     
     def __init__(self, dice):
-        """Initializes Game object with a list of Die objects"""
+        """Initializes Game object
+        
+        Parameters: 
+        dice ([Die]): a list of Die objects with the same faces """
         self.dice = dice
         self.__play_df = pd.DataFrame()
         
     def play(self, rolls):
-        """Takes an arguement that specifies how many times to roll 
-        each die in the list and stores the results in a dataframe"""
+        """Rolls each die and stores the results in a dataframe
+        
+        Parameters:
+        rolls (int): how many times to roll each die"""
         df = pd.DataFrame()
         x = 0
         for die in self.dice:
@@ -64,8 +85,10 @@ class Game:
         self.__play_df = df
         
     def recent_play(self, form = 'wide'):
-        """Shows the results of the most recent play in either a 
-        narrow or wide format."""
+        """Shows the results of the most recent play
+        
+        Parameters:
+        form (str): how to format the results, wide/narrow. Default wide"""
         if form == 'wide':
             return(self.__play_df)
         elif form == 'narrow':
@@ -78,36 +101,60 @@ class Analyzer:
     descriptive statistics about it'''
     
     def __init__(self, game):
-        """Initializes an Analyzer object which takes a Game object
-        as an arguement"""
+        """Initializes an Analyzer
+        
+        Parameters:
+        game (Game): A game object that has been played"""
         if isinstance(game, Game):
             self.game = game
         else:
             raise ValueError("Please pass a Game object")
             
     def jackpot(self):
-        """Counts how many times a roll in the game resulted in a jackpot
-        and returns that number"""
+        """Counts how many times a roll resulted in a jackpot
+        
+        Returns:
+        int: number of jackpots
+        """
         df = self.game.recent_play()
         uniques = [len(df.loc[row].unique()) for row in df.index]
         x = [1 if u==1 else 0 for u in uniques]
         return sum(x)
         
     def face_counts_per_roll(self):
-        """Counts how many times each face is rolled in an event
-        and returns a data frame of those results"""
+        """Counts how many times each face is rolled
+        
+        Returns:
+        pd.DataFrame: number of times a face was rolled in each event"""
         df = self.game.recent_play()
-        values = [df[col].value_counts() for col in df.columns]
+        
+        new_df = pd.DataFrame(index=self.game.dice[0].current_state().index)
+        new_df.index.name = "Roll"
+        
+        x = 1
+        for row in df.index:
+            counts = df.loc[row].value_counts()
+            new_df[x] = [counts[i] if i in counts.index else 0 for i in new_df.index]
+            x+=1
 
-        return values
+        return new_df.transpose()
         
     def combo_count(self):
         """Counts the number of distinct combinations of faces rolled
-        and returns a data frame of the results"""
-        pass
+        
+        Returns:
+        pd.DataFrame: table with an index of the combination of faces and value of frequency"""
+        df = self.game.recent_play()
+        df = df.transpose()
+        sorted_df = df.apply(lambda x: 
+                             x.sort_values().reset_index(drop = True)).transpose()
+        return sorted_df.value_counts().to_frame()
         
     def permutation_count(self):
         """Counts the number of distinct permutations of faces rolled
-        and returns a data frame of the results"""
-        pass
+        
+        Returns:
+        pd.DataFrame: table with an index of the permutation of faces and value of frequency"""
+        df = self.game.recent_play()
+        return df.value_counts().to_frame()
         
