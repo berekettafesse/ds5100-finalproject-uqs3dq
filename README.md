@@ -1,4 +1,5 @@
-# Monte Carlo Simulator
+## Metadata
+Project: Monte Carlo Simulator
 Author: Bereket Tafesse
 
 ## Synopsis
@@ -41,6 +42,11 @@ analyzer.jackpot()
 ```
 
 ## API Description 
+To see this information in python file or shell, run:
+```python
+help(montecarlo.montecarlo)
+```
+
     class Analyzer(game)
      |  
      |  Takes the results of a game and computes 
